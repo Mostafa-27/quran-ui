@@ -26,6 +26,7 @@ interface QuranState {
   addAudioFiles: (audioFiles: AudioFile[]) => void;
   setCurrentPage: (page: number) => void;
   setCurrentChapter: (chapter: number) => void;
+  syncCurrentChapter: (chapter: number) => void;
   setActiveAyahKey: (key: string | null) => void;
   setIsPlaying: (playing: boolean) => void;
   setIsBuffering: (buffering: boolean) => void;
@@ -78,6 +79,7 @@ export const useQuranStore = create<QuranState>((set, get) => ({
       set({ currentChapter: chapterId });
     }
   },
+  syncCurrentChapter: (chapterId) => set({ currentChapter: chapterId }),
   setActiveAyahKey: (key) => set({ activeAyahKey: key }),
   setIsPlaying: (playing) => set({ isPlaying: playing }),
   setIsBuffering: (buffering) => set({ isBuffering: buffering }),

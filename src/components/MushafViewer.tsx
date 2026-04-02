@@ -61,7 +61,18 @@ export default function MushafViewer() {
     return () => {
       cancelled = true;
     };
-  }, [currentPage, reciterId, currentChapter, setVerses, setAudioFiles]);
+  }, [currentPage, reciterId, setVerses, setAudioFiles]);
+
+  // Sync currentChapter when verses change
+  useEffect(() => {
+    if (verses.length > 0) {
+      const firstVerse = verses[0];
+      const chapterId = parseInt(firstVerse.verse_key.split(":")[0]);
+      if (chapterId !== currentChapter) {
+        useQuranStore.getState().syncCurrentChapter(chapterId);
+      }
+    }
+  }, [verses, currentChapter]);
 
   return (
     <div className="mushaf-viewer-container flex flex-col items-center py-6 px-4 min-h-screen">

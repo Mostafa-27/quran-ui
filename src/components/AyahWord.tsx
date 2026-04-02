@@ -43,7 +43,7 @@ export default function AyahWord({ word, onPlay }: AyahWordProps) {
     <span
       className={`
         mushaf-word inline-block cursor-pointer px-1 transition-all duration-200
-        font-arabic text-2xl md:text-3xl text-[#2c2c2c]
+        font-arabic text-2xl md:text-[27px] text-[#2c2c2c]
         ${
           isActive
             ? "bg-amber-400/20 text-amber-900 rounded-sm shadow-[0_0_10px_rgba(251,191,36,0.2)]"
