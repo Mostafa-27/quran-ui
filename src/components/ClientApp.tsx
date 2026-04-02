@@ -22,7 +22,7 @@ export default function ClientApp({ chapters, reciters }: ClientAppProps) {
   return (
     <>
       <Header chapters={chapters} reciters={reciters} />
-      <main className="min-h-screen">
+      <main className="min-h-screen pb-32 sm:pb-36 lg:pb-40">
         <MushafViewer />
       </main>
       <AudioPlayer />

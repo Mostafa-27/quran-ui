@@ -115,48 +115,73 @@ body {
 }
 
 .mushaf-lines-container {
-  /* Line height 1.8 - 2.0 is more realistic for web display at 24px */
-  line-height: 1.8;
-  padding: 0 1rem;
+  padding: 0 0.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.mushaf-lines-container > div {
+  width: 100%;
+  min-height: 3.8rem; /* Correct Medina 15-line spacing */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .mushaf-line {
-  min-height: 2.8rem; /* Adjusted for smaller font */
-  border-bottom: 1px solid rgba(139, 115, 85, 0.03); /* Extremely subtle line guide */
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 3rem;
 }
 
 .mushaf-word {
-  font-size: 1.5rem; /* Medina standard 24px */
+  /* Inherit tailwind sizing but provide fallback */
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   user-select: none;
-  line-height: inherit;
+  line-height: 1; /* Reset for flex grid stability */
   color: #1a1a1a;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .mushaf-word:hover {
-  transform: translateY(-1px);
   color: #000;
+  background: rgba(139, 115, 85, 0.08);
+  border-radius: 4px;
+}
+
+.select-custom option {
+  background-color: #1a1a1a;
+  color: white;
+  padding: 10px;
+}
+
+/* Ensure the select itself is always readable in the dark header */
+.select-custom {
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 
 /* ===== Responsive Scaling ===== */
 @media (max-width: 640px) {
   .mushaf-scaling-container {
     transform: scale(0.85);
-    margin-top: -50px;
+    margin-top: 10px;
   }
 }
 
 @media (max-width: 480px) {
   .mushaf-scaling-container {
     transform: scale(0.7);
-    margin-top: -100px;
+    margin-top: 10px;
   }
 }
 
 @media (max-width: 380px) {
   .mushaf-scaling-container {
     transform: scale(0.6);
-    margin-top: -140px;
+    margin-top: 10px;
   }
 }
 

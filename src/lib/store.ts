@@ -22,7 +22,8 @@ interface QuranState {
   // Actions
   setChapters: (chapters: Chapter[]) => void;
   setVerses: (verses: Verse[]) => void;
-  setAudioFiles: (audioFiles: AudioFile[]) => void;
+   setAudioFiles: (audioFiles: AudioFile[]) => void;
+  addAudioFiles: (audioFiles: AudioFile[]) => void;
   setCurrentPage: (page: number) => void;
   setCurrentChapter: (chapter: number) => void;
   setActiveAyahKey: (key: string | null) => void;
@@ -55,7 +56,12 @@ export const useQuranStore = create<QuranState>((set, get) => ({
   // Actions
   setChapters: (chapters) => set({ chapters }),
   setVerses: (verses) => set({ verses }),
-  setAudioFiles: (audioFiles) => set({ audioFiles }),
+   setAudioFiles: (audioFiles) => set({ audioFiles }),
+  addAudioFiles: (newFiles) => set((state) => {
+    const existingKeys = new Set(state.audioFiles.map(af => af.verse_key));
+    const uniqueNew = (newFiles || []).filter(af => af && !existingKeys.has(af.verse_key));
+    return { audioFiles: [...state.audioFiles, ...uniqueNew] };
+  }),
   setCurrentPage: (page) =>
     set({ currentPage: page, activeAyahKey: null, isPlaying: false }),
   setCurrentChapter: (chapterId) => {

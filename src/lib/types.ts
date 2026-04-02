@@ -56,8 +56,17 @@ export interface VersesResponse {
   verses: Verse[];
 }
 
+export interface Pagination {
+  per_page: number;
+  current_page: number;
+  next_page: number | null;
+  total_pages: number;
+  total_records: number;
+}
+
 export interface AudioFilesResponse {
   audio_files: AudioFile[];
+  pagination: Pagination;
 }
 
 export interface RecitersResponse {

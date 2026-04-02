@@ -4,9 +4,11 @@ import { useRef, useCallback, useEffect } from "react";
 import { useQuranStore } from "@/lib/store";
 import { getAudioUrl } from "@/lib/api";
 
-export function useQuranAudio() {
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+// Singleton audio element to be shared across all instances of the hook
+let globalAudio: HTMLAudioElement | null = null;
+const listenersAttached = { ended: false, canplay: false, waiting: false, playing: false };
 
+export function useQuranAudio() {
   const {
     audioFiles,
     activeAyahKey,
@@ -18,34 +20,27 @@ export function useQuranAudio() {
     getPrevAyahKey,
   } = useQuranStore();
 
-  // Build a map of verse_key → full audio URL
-  const audioMap = useRef<Map<string, string>>(new Map());
-
-  useEffect(() => {
-    const map = new Map<string, string>();
-    audioFiles.forEach((af) => {
-      map.set(af.verse_key, getAudioUrl(af.url));
-    });
-    audioMap.current = map;
-  }, [audioFiles]);
-
   // Initialize audio element once
   useEffect(() => {
-    if (!audioRef.current) {
-      audioRef.current = new Audio();
-      audioRef.current.preload = "auto";
+    if (typeof window === "undefined") return;
+
+    if (!globalAudio) {
+      globalAudio = new Audio();
+      globalAudio.preload = "auto";
     }
 
-    const audio = audioRef.current;
+    const audio = globalAudio;
 
     const onEnded = () => {
-      // Auto-play next ayah
       const nextKey = useQuranStore.getState().getNextAyahKey();
       if (nextKey) {
-        const url = audioMap.current.get(nextKey);
-        if (url && audio) {
-          useQuranStore.getState().setActiveAyahKey(nextKey);
-          audio.src = url;
+        // We use the audioMap from the current store state
+        // but since we need the URL, we'll get it from the store's audioFiles
+        const state = useQuranStore.getState();
+        const af = state.audioFiles.find(f => f.verse_key === nextKey);
+        if (af && audio) {
+          state.setActiveAyahKey(nextKey);
+          audio.src = getAudioUrl(af.url);
           audio.play().catch(console.error);
         }
       } else {
@@ -67,26 +62,40 @@ export function useQuranAudio() {
       useQuranStore.getState().setIsBuffering(false);
     };
 
-    audio.addEventListener("ended", onEnded);
-    audio.addEventListener("canplay", onCanPlay);
-    audio.addEventListener("waiting", onWaiting);
-    audio.addEventListener("playing", onPlaying);
+    // Attach listeners only once
+    if (!listenersAttached.ended) {
+      audio.addEventListener("ended", onEnded);
+      listenersAttached.ended = true;
+    }
+    if (!listenersAttached.canplay) {
+      audio.addEventListener("canplay", onCanPlay);
+      listenersAttached.canplay = true;
+    }
+    if (!listenersAttached.waiting) {
+      audio.addEventListener("waiting", onWaiting);
+      listenersAttached.waiting = true;
+    }
+    if (!listenersAttached.playing) {
+      audio.addEventListener("playing", onPlaying);
+      listenersAttached.playing = true;
+    }
 
-    return () => {
-      audio.removeEventListener("ended", onEnded);
-      audio.removeEventListener("canplay", onCanPlay);
-      audio.removeEventListener("waiting", onWaiting);
-      audio.removeEventListener("playing", onPlaying);
-    };
+    // We don't remove them on unmount because other instances might still need them
+    // and we only want one set of listeners for the singleton.
   }, []);
 
   const playAyah = useCallback(
     (verseKey: string) => {
-      const audio = audioRef.current;
-      if (!audio) return;
+      if (!globalAudio) return;
+      const audio = globalAudio;
 
-      const url = audioMap.current.get(verseKey);
-      if (!url) return;
+      const af = audioFiles.find(f => f.verse_key === verseKey);
+      if (!af) {
+        console.warn(`No audio file found for ${verseKey}`);
+        return;
+      }
+
+      const url = getAudioUrl(af.url);
 
       // If same ayah is playing, toggle pause
       if (activeAyahKey === verseKey && isPlaying) {
@@ -108,12 +117,12 @@ export function useQuranAudio() {
       audio.src = url;
       audio.play().catch(console.error);
     },
-    [activeAyahKey, isPlaying, setActiveAyahKey, setIsPlaying, setIsBuffering]
+    [activeAyahKey, isPlaying, audioFiles, setActiveAyahKey, setIsPlaying, setIsBuffering]
   );
 
   const togglePlayPause = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio || !activeAyahKey) return;
+    if (!globalAudio || !activeAyahKey) return;
+    const audio = globalAudio;
 
     if (isPlaying) {
       audio.pause();
@@ -125,8 +134,8 @@ export function useQuranAudio() {
   }, [activeAyahKey, isPlaying, setIsPlaying]);
 
   const stop = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
+    if (!globalAudio) return;
+    const audio = globalAudio;
 
     audio.pause();
     audio.currentTime = 0;
@@ -152,3 +161,4 @@ export function useQuranAudio() {
     playPrev,
   };
 }
+

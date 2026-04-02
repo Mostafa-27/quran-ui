@@ -5,6 +5,7 @@ import { Chapter, Verse, Word } from "@/lib/types";
 import MushafLine from "./MushafLine";
 import SurahHeader from "./SurahHeader";
 import { useQuranStore } from "@/lib/store";
+import { toArabicNumber } from "@/lib/localization";
 
 interface MushafPageProps {
   pageNumber: number;
@@ -26,6 +27,9 @@ export default function MushafPage({
 
     verses.forEach((verse) => {
       verse.words.forEach((word) => {
+        // Safety: Ensure word has verse_key
+        if (!word.verse_key) word.verse_key = verse.verse_key;
+        
         if (!linesMap[word.line_number]) {
           linesMap[word.line_number] = [];
         }
@@ -46,7 +50,7 @@ export default function MushafPage({
 
   return (
     <div
-      className="mushaf-page mx-auto shadow-2xl bg-[#fdfcf0] relative w-full max-w-150 aspect-11/16 p-12 md:p-16 mb-20 flex flex-col"
+      className="mushaf-page mx-auto shadow-2xl bg-[#fdfcf0] relative w-full max-w-[650px] h-fit min-h-[850px] p-6 md:p-10 mb-20 flex flex-col"
       dir="rtl"
     >
       {/* Decorative Border Inner */}
@@ -58,14 +62,16 @@ export default function MushafPage({
           const wordsInLine = lines[lineNumber] || [];
           const surahHeaderChapter = surahStarts[lineNumber];
 
-          // Bismillah centering logic: typically centered if no other text is on the line
+          // Bismillah centering logic: typically centered if no other non-Bismillah text is on the line
+          // In Al-Fatiha, Line 2 has 5 words including the end marker
           const isBismillahOnly = 
             wordsInLine.length > 0 && 
-            wordsInLine.length < 5 &&
+            wordsInLine.length <= 5 &&
             wordsInLine.every(w => w.text_uthmani.includes("بِسْمِ") || 
-                                  w.text_uthmani.includes("ٱللَّهِ") || 
-                                  w.text_uthmani.includes("ٱلرَّحْمَـٰنِ") || 
-                                  w.text_uthmani.includes("ٱلرَّحِيمِ"));
+                                  w.text_uthmani.includes("ٱللَّهِ") || 
+                                  w.text_uthmani.includes("ٱلرَّحْمَـٰنِ") || 
+                                  w.text_uthmani.includes("ٱلرَّحِيمِ") ||
+                                  w.char_type_name === "end");
 
           return (
             <div key={lineNumber} className="flex flex-col w-full">
@@ -84,7 +90,7 @@ export default function MushafPage({
       {/* Page Number footer */}
       <div className="text-center mt-8">
         <span className="text-[#8b7355] font-arabic opacity-60">
-          {pageNumber}
+          {toArabicNumber(pageNumber)}
         </span>
       </div>
     </div>

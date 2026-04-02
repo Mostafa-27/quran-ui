@@ -16,8 +16,7 @@ export default function MushafLine({
   isCentered = false,
   onPlay,
 }: MushafLineProps) {
-  const sortedWords = [...words].sort((a, b) => a.position - b.position);
-  const shouldCenter = isCentered || sortedWords.length <= 3;
+  const shouldCenter = isCentered || words.length <= 3;
 
   return (
     <div
@@ -27,7 +26,7 @@ export default function MushafLine({
       `}
       data-line={lineNumber}
     >
-      {sortedWords.map((word) => (
+      {words.map((word) => (
         <AyahWord key={`${word.location}-${word.id}`} word={word} onPlay={onPlay} />
       ))}
     </div>
