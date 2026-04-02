@@ -1,26 +1,166 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
+/* ===== Custom Theme Tokens ===== */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-mushaf-bg: #0c1222;
+  --color-mushaf-bg-secondary: #131b2e;
+  --color-mushaf-text: #f0ead6;
+  --color-mushaf-text-muted: rgba(240, 234, 214, 0.45);
+  --color-mushaf-gold: #f6c744;
+  --color-mushaf-gold-dim: rgba(246, 199, 68, 0.15);
+  --color-mushaf-border: rgba(255, 255, 255, 0.06);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-arabic: var(--font-amiri), "Traditional Arabic", serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ===== Base Styles ===== */
+body {
+  background: linear-gradient(
+    165deg,
+    var(--color-mushaf-bg) 0%,
+    var(--color-mushaf-bg-secondary) 50%,
+    #0e1526 100%
+  );
+  min-height: 100vh;
+}
+
+/* ===== Arabic Font Utility ===== */
+.font-arabic {
+  font-family: var(--font-arabic);
+}
+
+/* ===== Glassmorphism ===== */
+.header-glass {
+  background: rgba(12, 18, 34, 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.player-glass {
+  background: rgba(12, 18, 34, 0.85);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+/* ===== Select Dropdown Styling ===== */
+.select-glass option {
+  background: #1a1f35;
+  color: #f0ead6;
+}
+
+/* ===== Active Ayah ===== */
+.ayah-active {
+  background: linear-gradient(
+    135deg,
+    rgba(246, 199, 68, 0.12) 0%,
+    rgba(251, 191, 36, 0.08) 100%
+  );
+  border-radius: 8px;
+  box-shadow: 0 0 30px rgba(246, 199, 68, 0.06);
+}
+
+/* ===== Ayah Hover ===== */
+.ayah-text {
+  transition:
+    background 0.2s ease,
+    box-shadow 0.3s ease;
+}
+
+.ayah-text:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+}
+
+/* ===== Scrollbar ===== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* ===== Player Button Hover Glow ===== */
+.player-btn-main {
+  transition: all 0.2s ease;
+}
+
+.player-btn-main:hover:not(:disabled) {
+  box-shadow: 0 0 24px rgba(246, 199, 68, 0.35);
+}
+
+/* ===== Mushaf Layout & Aesthetic ===== */
+.mushaf-page {
+  box-shadow: 
+    0 10px 40px -10px rgba(0, 0, 0, 0.5),
+    0 25px 100px -20px rgba(0, 0, 0, 0.4),
+    inset 20px 0 40px -10px rgba(0, 0, 0, 0.05), /* Inner Binding Shadow Left */
+    inset -20px 0 40px -10px rgba(0, 0, 0, 0.05), /* Inner Binding Shadow Right */
+    inset 0 0 120px rgba(220, 215, 190, 0.1);
+  background-image: 
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+    url("https://www.transparenttextures.com/patterns/natural-paper.png");
+  border: 12px solid #dcd7be;
+  border-radius: 4px;
+}
+
+.mushaf-lines-container {
+  /* Line height 1.8 - 2.0 is more realistic for web display at 24px */
+  line-height: 1.8;
+  padding: 0 1rem;
+}
+
+.mushaf-line {
+  min-height: 2.8rem; /* Adjusted for smaller font */
+  border-bottom: 1px solid rgba(139, 115, 85, 0.03); /* Extremely subtle line guide */
+}
+
+.mushaf-word {
+  font-size: 1.5rem; /* Medina standard 24px */
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  line-height: inherit;
+  color: #1a1a1a;
+}
+
+.mushaf-word:hover {
+  transform: translateY(-1px);
+  color: #000;
+}
+
+/* ===== Responsive Scaling ===== */
+@media (max-width: 640px) {
+  .mushaf-scaling-container {
+    transform: scale(0.85);
+    margin-top: -50px;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@media (max-width: 480px) {
+  .mushaf-scaling-container {
+    transform: scale(0.7);
+    margin-top: -100px;
+  }
+}
+
+@media (max-width: 380px) {
+  .mushaf-scaling-container {
+    transform: scale(0.6);
+    margin-top: -140px;
+  }
+}
+
+/* ===== Smooth Transitions ===== */
+* {
+  scroll-behavior: smooth;
 }
