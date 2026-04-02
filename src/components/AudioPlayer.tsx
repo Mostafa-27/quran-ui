@@ -28,20 +28,7 @@ export default function AudioPlayer() {
           {/* Section 1: Page Navigation */}
           <div className="flex items-center justify-between sm:justify-start sm:gap-6 order-2 sm:order-1" dir="rtl">
             <div className="flex items-center gap-1 group">
-              <button
-                onClick={() => setCurrentPage(Math.min(604, currentPage + 1))}
-                disabled={currentPage === 604}
-                className="btn-ghost flex h-10 w-10 items-center justify-center rounded-full transition-all active:scale-90 disabled:opacity-10 cursor-pointer"
-                aria-label="Next Page"
-              >
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-              </button>
-              
-              <div className="flex flex-col items-center min-w-17.5 select-none">
-                <span className="text-[10px] font-bold text-amber-500/40 mb-0.5 font-arabic">{uiLabels.page}</span>
-                <span className="font-arabic text-3xl text-amber-200 leading-none drop-shadow-md transition-all group-hover:text-amber-400">{toArabicNumber(currentPage)}</span>
-              </div>
-
+              {/* Right Arrow: Previous Page (-1) */}
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
@@ -49,6 +36,21 @@ export default function AudioPlayer() {
                 aria-label="Previous Page"
               >
                 <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-9-6"/></svg>
+              </button>
+              
+              <div className="flex flex-col items-center min-w-17.5 select-none">
+                <span className="text-[10px] font-bold text-amber-500/40 mb-0.5 font-arabic">{uiLabels.page}</span>
+                <span className="font-arabic text-3xl text-amber-200 leading-none drop-shadow-md transition-all group-hover:text-amber-400">{toArabicNumber(currentPage)}</span>
+              </div>
+
+              {/* Left Arrow: Next Page (+1) */}
+              <button
+                onClick={() => setCurrentPage(Math.min(604, currentPage + 1))}
+                disabled={currentPage === 604}
+                className="btn-ghost flex h-10 w-10 items-center justify-center rounded-full transition-all active:scale-90 disabled:opacity-10 cursor-pointer"
+                aria-label="Next Page"
+              >
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>
               </button>
             </div>
             
