@@ -20,6 +20,9 @@ export interface Word {
   audio_url: string | null;
   char_type_name: string; // 'word' or 'end'
   text_uthmani: string;
+  code_v1?: string;
+  code_v2?: string;
+  text_qpc_hafs?: string;
   line_number: number;
   page_number: number;
   location: string;
@@ -30,6 +33,7 @@ export interface Verse {
   id: number;
   verse_key: string;
   text_uthmani: string;
+  juz_number?: number;
   words: Word[];
 }
 

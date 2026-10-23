@@ -16,18 +16,17 @@ export default function MushafLine({
   isCentered = false,
   onPlay,
 }: MushafLineProps) {
-  const shouldCenter = isCentered || words.length <= 3;
-
   return (
     <div
-      className={`
-        mushaf-line flex w-full items-center gap-0
-        ${shouldCenter ? "justify-center gap-4" : "justify-between"}
-      `}
+      className={`mushaf-line ${isCentered ? "center" : "justified"}`}
       data-line={lineNumber}
     >
       {words.map((word) => (
-        <AyahWord key={`${word.location}-${word.id}`} word={word} onPlay={onPlay} />
+        <AyahWord
+          key={`${word.location}-${word.id}`}
+          word={word}
+          onPlay={onPlay}
+        />
       ))}
     </div>
   );

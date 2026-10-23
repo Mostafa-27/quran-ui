@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useLayoutEffect, useEffect } from "react";
 import Header from "./Header";
 import BismillahDivider from "./BismillahDivider";
 import MushafViewer from "./MushafViewer";
@@ -11,23 +11,38 @@ import { Chapter, Reciter } from "@/lib/types";
 interface ClientAppProps {
   chapters: Chapter[];
   reciters: Reciter[];
+  initialPage?: number;
 }
 
-export default function ClientApp({ chapters, reciters }: ClientAppProps) {
+export default function ClientApp({
+  chapters,
+  reciters,
+  initialPage = 1,
+}: ClientAppProps) {
   const setChapters = useQuranStore((s) => s.setChapters);
+  const setCurrentPage = useQuranStore((s) => s.setCurrentPage);
+
+  useLayoutEffect(() => {
+    if (
+      initialPage &&
+      initialPage !== useQuranStore.getState().currentPage
+    ) {
+      setCurrentPage(initialPage);
+    }
+  }, [initialPage, setCurrentPage]);
 
   useEffect(() => {
     setChapters(chapters);
   }, [chapters, setChapters]);
 
   return (
-    <>
+    <div className="flex h-screen flex-col overflow-hidden">
       <Header chapters={chapters} reciters={reciters} />
       <BismillahDivider />
-      <main className="min-h-screen pb-32 sm:pb-36 lg:pb-40">
-        <MushafViewer />
+      <main className="flex-1 overflow-hidden">
+        <MushafViewer initialPage={initialPage} />
       </main>
       <AudioPlayer />
-    </>
+    </div>
   );
 }

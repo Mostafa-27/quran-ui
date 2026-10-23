@@ -1,25 +1,25 @@
 "use client";
 
 import { Chapter } from "@/lib/types";
+import { toArabicNumber } from "@/lib/localization";
 
 interface SurahHeaderProps {
-  chapter: Chapter;
+  chapter?: Chapter;
+  surahNumber: number;
 }
 
-export default function SurahHeader({ chapter }: SurahHeaderProps) {
+export default function SurahHeader({
+  chapter,
+  surahNumber,
+}: SurahHeaderProps) {
+  const name = chapter?.name_arabic ?? toArabicNumber(surahNumber);
+
   return (
-    <div className="surah-header w-full mb-1 relative">
-      
-      <div className="absolute inset-0 flex items-center" aria-hidden="true">
-        <div className="w-full border-t-2 border-[#e6debb]"></div>
-      </div>
-      
-      <div className="relative flex justify-center">
-        <div className="bg-[#fdfcf0] px-6 py-2 border-2 border-[#dcd7be] rounded-full shadow-sm">
-          <h2 className="font-arabic text-2xl text-[#8b7355]">
-            سُورَةُ {chapter.name_arabic}
-          </h2>
-        </div>
+    <div className="surah-header flex h-full w-full items-center justify-center">
+      <div className="surah-banner relative flex w-full items-center justify-center px-4">
+        <span className="font-arabic relative z-10 text-lg text-[#8b6b3e] md:text-xl">
+          سُورَةُ {name}
+        </span>
       </div>
     </div>
   );

@@ -1,56 +1,118 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useQuranStore } from "@/lib/store";
 import { useQuranAudio } from "@/hooks/useQuranAudio";
-import { fetchPage, fetchAudioFiles } from "@/lib/api";
+import { useMushafFitScale } from "@/hooks/useMushafFitScale";
+import { useQpcPageFont } from "@/hooks/useQpcPageFont";
+import { fetchPage } from "@/lib/api";
 import MushafPage from "./MushafPage";
 
-export default function MushafViewer() {
-  const {
-    verses,
-    currentPage,
-    reciterId,
-    setVerses,
-    setAudioFiles,
-    setCurrentPage,
-    currentChapter
-  } = useQuranStore();
+interface MushafViewerProps {
+  initialPage?: number;
+}
+
+export default function MushafViewer({ initialPage = 1 }: MushafViewerProps) {
+  const verses = useQuranStore((s) => s.verses);
+  const currentPage = useQuranStore((s) => s.currentPage);
+  const reciterId = useQuranStore((s) => s.reciterId);
+  const setVerses = useQuranStore((s) => s.setVerses);
+  const setAudioFiles = useQuranStore((s) => s.setAudioFiles);
+  const getCachedPage = useQuranStore((s) => s.getCachedPage);
+  const cachePage = useQuranStore((s) => s.cachePage);
+  const clearAutoPlay = useQuranStore((s) => s.clearAutoPlay);
 
   const { playAyah } = useQuranAudio();
+  const { fontName, ready: fontReady } = useQpcPageFont(currentPage);
   const [isLoading, setIsLoading] = useState(false);
+  const initializedRef = useRef(false);
+  const inFlightPrefetches = useRef<Set<string>>(new Set());
+  const containerRef = useRef<HTMLDivElement>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
 
-  // Fetch page data whenever currentPage or reciter changes
+  useMushafFitScale(containerRef, pageRef, !isLoading && verses.length > 0 && fontReady);
+
   useEffect(() => {
+    if (initialPage && initialPage !== useQuranStore.getState().currentPage) {
+      useQuranStore.getState().setCurrentPage(initialPage);
+    }
+    initializedRef.current = true;
+  }, [initialPage]);
+
+  useEffect(() => {
+    if (!initializedRef.current) return;
+
     let cancelled = false;
 
+    const prefetchPage = (page: number) => {
+      if (page < 1 || page > 604) return;
+
+      const key = `${reciterId}:${page}`;
+      if (getCachedPage(page, reciterId)) return;
+      if (inFlightPrefetches.current.has(key)) return;
+
+      inFlightPrefetches.current.add(key);
+
+      fetchPage(page)
+        .then((pageVerses) => {
+          if (cancelled) return;
+          cachePage(page, reciterId, pageVerses, []);
+        })
+        .catch(() => {})
+        .finally(() => {
+          inFlightPrefetches.current.delete(key);
+        });
+    };
+
+    const prefetchAdjacent = () => {
+      const run = () => {
+        prefetchPage(currentPage - 1);
+        prefetchPage(currentPage + 1);
+      };
+
+      if (typeof requestIdleCallback !== "undefined") {
+        requestIdleCallback(run, { timeout: 1000 });
+      } else {
+        setTimeout(run, 0);
+      }
+    };
+
     async function loadPageData() {
-      setIsLoading(true);
-      try {
-        // 1. First fetch the verses for the page
-        const pageVerses = await fetchPage(currentPage);
-        
-        if (cancelled) return;
-        setVerses(pageVerses);
-        
-        // 2. Clear existing audio files and identify unique chapters on this page
-        setAudioFiles([]);
-        const chapterIds = Array.from(new Set(
-          pageVerses.map(v => parseInt(v.verse_key.split(":")[0]))
-        ));
+      const cached = getCachedPage(currentPage, reciterId);
 
-        // 3. Fetch audio files for ALL chapters on this page
-        await Promise.all(chapterIds.map(async (cid) => {
-          const audioData = await fetchAudioFiles(reciterId, cid);
-          if (!cancelled) {
-            // Use addAudioFiles to merge
-            useQuranStore.getState().addAudioFiles(audioData);
-          }
-        }));
+      if (cached) {
+        setVerses(cached.verses);
+        setAudioFiles(cached.audioFiles);
+        setIsLoading(false);
 
-        if (!cancelled) {
-          setIsLoading(false);
+        if (useQuranStore.getState().pendingAutoPlay) {
+          clearAutoPlay();
+          const firstVerseKey = cached.verses[0]?.verse_key;
+          if (firstVerseKey) playAyah(firstVerseKey);
         }
+
+        prefetchAdjacent();
+        return;
+      }
+
+      setIsLoading(true);
+
+      try {
+        const pageVerses = await fetchPage(currentPage);
+        if (cancelled) return;
+
+        setVerses(pageVerses);
+        setAudioFiles([]);
+        cachePage(currentPage, reciterId, pageVerses, []);
+
+        if (useQuranStore.getState().pendingAutoPlay) {
+          clearAutoPlay();
+          const firstVerseKey = pageVerses[0]?.verse_key;
+          if (firstVerseKey) playAyah(firstVerseKey);
+        }
+
+        if (!cancelled) setIsLoading(false);
+        prefetchAdjacent();
       } catch (err) {
         console.error("Failed to load page data:", err);
         if (!cancelled) setIsLoading(false);
@@ -58,36 +120,36 @@ export default function MushafViewer() {
     }
 
     loadPageData();
+
     return () => {
       cancelled = true;
     };
-  }, [currentPage, reciterId, setVerses, setAudioFiles]);
-
-  // Sync currentChapter when verses change
-  useEffect(() => {
-    if (verses.length > 0) {
-      const firstVerse = verses[0];
-      const chapterId = parseInt(firstVerse.verse_key.split(":")[0]);
-      if (chapterId !== currentChapter) {
-        useQuranStore.getState().syncCurrentChapter(chapterId);
-      }
-    }
-  }, [verses, currentChapter]);
+  }, [currentPage, reciterId, getCachedPage, cachePage, clearAutoPlay, playAyah, setVerses, setAudioFiles]);
 
   return (
-    <div className="mushaf-viewer-container flex flex-col items-center py-6 px-4 min-h-screen">
-      {isLoading ? (
-
-        <div className="flex h-150 items-center justify-center opacity-50">
+    <div
+      ref={containerRef}
+      className="flex h-full w-full items-center justify-center overflow-hidden px-4 py-2"
+    >
+      {isLoading || !fontReady ? (
+        <div className="flex h-full w-full items-center justify-center opacity-50">
           <div className="h-8 w-8 animate-spin rounded-full border-2 border-amber-400/20 border-t-amber-400"></div>
         </div>
       ) : (
-        <div className="mushaf-scaling-container transition-all duration-300 transform origin-top">
-           <MushafPage 
-              pageNumber={currentPage} 
-              verses={verses} 
-              onPlay={playAyah} 
-           />
+        <div
+          className="mushaf-scaling-container transition-transform duration-150"
+          style={{
+            transform: "scale(var(--mushaf-scale, 1))",
+            transformOrigin: "center center",
+          }}
+        >
+          <MushafPage
+            ref={pageRef}
+            pageNumber={currentPage}
+            verses={verses}
+            onPlay={playAyah}
+            fontName={fontName}
+          />
         </div>
       )}
     </div>

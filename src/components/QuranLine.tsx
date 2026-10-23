@@ -16,6 +16,7 @@ export default function QuranLine({ words, lineNumber, onPlay, isCentered = fals
       className={`quran-line flex w-full flex-row-reverse items-baseline font-arabic text-2xl leading-loose md:text-3xl lg:text-4xl ${
         isCentered ? "justify-center gap-2" : "justify-between"
       }`}
+      data-line={lineNumber}
       dir="rtl"
     >
       {words.map((word) => (

@@ -1,98 +1,151 @@
 "use client";
 
-import { useMemo } from "react";
-import { Chapter, Verse, Word } from "@/lib/types";
+import { forwardRef, useMemo } from "react";
+import { Verse, Word } from "@/lib/types";
 import MushafLine from "./MushafLine";
 import SurahHeader from "./SurahHeader";
 import { useQuranStore } from "@/lib/store";
 import { toArabicNumber } from "@/lib/localization";
+import rawLayout from "@/data/qpcV2Layout.json";
+
+const BISMILLAH = "بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ";
+
+const LINE_SURAH_NAME = 0;
+const LINE_AYAH = 1;
+const LINE_BASMALLAH = 2;
+
+type LayoutLine = [number, number, number];
+const LAYOUT = rawLayout as unknown as Record<string, LayoutLine[]>;
+
+const EMPTY_LAYOUT: LayoutLine[] = Array.from({ length: 15 }, () => [
+  3,
+  0,
+  0,
+]);
 
 interface MushafPageProps {
   pageNumber: number;
   verses: Verse[];
   onPlay: (verseKey: string) => void;
+  fontName?: string;
 }
 
-export default function MushafPage({
-  pageNumber,
-  verses,
-  onPlay,
-}: MushafPageProps) {
-  const chapters = useQuranStore((s) => s.chapters);
+const MushafPage = forwardRef<HTMLDivElement, MushafPageProps>(
+  ({ pageNumber, verses, onPlay, fontName }, ref) => {
+    const chapters = useQuranStore((s) => s.chapters);
 
-  // Group words and identify surah starts
-  const { lines, surahStarts } = useMemo(() => {
-    const linesMap: Record<number, Word[]> = {};
-    const starts: Record<number, Chapter> = {};
+    const { wordsByLine, pageChapter, juzNumber } = useMemo(() => {
+      const map = new Map<number, Word[]>();
 
-    verses.forEach((verse) => {
-      verse.words.forEach((word) => {
-        // Safety: Ensure word has verse_key
-        if (!word.verse_key) word.verse_key = verse.verse_key;
-        
-        if (!linesMap[word.line_number]) {
-          linesMap[word.line_number] = [];
-        }
-        linesMap[word.line_number].push(word);
+      verses.forEach((verse) => {
+        verse.words.forEach((word) => {
+          if (!word.verse_key) word.verse_key = verse.verse_key;
+
+          const lineNumber = word.line_number || 1;
+          if (!map.has(lineNumber)) map.set(lineNumber, []);
+          map.get(lineNumber)!.push(word);
+        });
       });
-      
-      const [chapterId, verseNumber] = verse.verse_key.split(":").map(Number);
-      if (verseNumber === 1 && verse.words.length > 0) {
-        const chapter = chapters.find(c => c.id === chapterId);
-        if (chapter) {
-          starts[verse.words[0].line_number] = chapter;
-        }
-      }
-    });
 
-    return { lines: linesMap, surahStarts: starts };
-  }, [verses, chapters]);
+      const firstVerse = verses[0];
+      const chapterId = firstVerse
+        ? Number(firstVerse.verse_key.split(":")[0])
+        : null;
+      const chapter = chapterId
+        ? chapters.find((c) => c.id === chapterId)
+        : undefined;
 
-  return (
-    <div
-      className="mushaf-page mx-auto shadow-2xl bg-[#fdfcf0] relative w-full max-w-[650px] h-fit min-h-[850px] p-6 md:p-10 mb-20 flex flex-col"
-      dir="rtl"
-    >
-      {/* Decorative Border Inner */}
-      <div className="absolute inset-2 border-2 border-[#e6debb] pointer-events-none"></div>
+      return {
+        wordsByLine: map,
+        pageChapter: chapter,
+        juzNumber: firstVerse?.juz_number,
+      };
+    }, [verses, chapters]);
 
-      <div className="mushaf-lines-container flex flex-col">
-        {Array.from({ length: 15 }).map((_, idx) => {
-          const lineNumber = idx + 1;
-          const wordsInLine = lines[lineNumber] || [];
-          const surahHeaderChapter = surahStarts[lineNumber];
+    const layout = LAYOUT[String(pageNumber)] ?? EMPTY_LAYOUT;
+    const fontStyle = fontName
+      ? { fontFamily: `"${fontName}", var(--font-arabic)` }
+      : undefined;
 
-          // Bismillah centering logic: typically centered if no other non-Bismillah text is on the line
-          // In Al-Fatiha, Line 2 has 5 words including the end marker
-          const isBismillahOnly = 
-            wordsInLine.length > 0 && 
-            wordsInLine.length <= 5 &&
-            wordsInLine.every(w => w.text_uthmani.includes("بِسْمِ") || 
-                                  w.text_uthmani.includes("ٱللَّهِ") || 
-                                  w.text_uthmani.includes("ٱلرَّحْمَـٰنِ") || 
-                                  w.text_uthmani.includes("ٱلرَّحِيمِ") ||
-                                  w.char_type_name === "end");
+    return (
+      <div ref={ref} className="mushaf-page relative mx-auto" dir="rtl">
+        <div className="pointer-events-none absolute inset-2 border-2 border-[#e6debb]" />
 
-          return (
-            <div key={lineNumber} className="flex flex-col w-full">
-              {surahHeaderChapter && <SurahHeader chapter={surahHeaderChapter} />}
-              <MushafLine
-                lineNumber={lineNumber}
-                words={wordsInLine}
-                onPlay={onPlay}
-                isCentered={isBismillahOnly}
-              />
-            </div>
-          );
-        })}
-      </div>
+        <div className="mushaf-top-strip relative">
+          <span className="font-arabic">
+            {pageChapter?.name_arabic ?? "المصحف"}
+          </span>
+          {typeof juzNumber === "number" && (
+            <span className="font-arabic">
+              الجزء {toArabicNumber(juzNumber)}
+            </span>
+          )}
+        </div>
 
-      {/* Page Number footer */}
-      <div className="text-center mt-8">
-        <span className="text-[#8b7355] font-arabic opacity-60">
+        <div className="mushaf-frame relative" style={fontStyle}>
+          {layout.map((line, idx) => {
+            const [type, isCentered, surahNumber] = line;
+            const lineNumber = idx + 1;
+
+            if (type === LINE_SURAH_NAME) {
+              const chapter = chapters.find((c) => c.id === surahNumber);
+
+              return (
+                <div
+                  key={lineNumber}
+                  className="mushaf-row"
+                  data-line={lineNumber}
+                >
+                  <SurahHeader
+                    chapter={chapter}
+                    surahNumber={surahNumber}
+                  />
+                </div>
+              );
+            }
+
+            if (type === LINE_BASMALLAH) {
+              return (
+                <div
+                  key={lineNumber}
+                  className="mushaf-row"
+                  data-line={lineNumber}
+                >
+                  <div className="mushaf-line center bismillah-line">
+                    <span className="font-arabic">{BISMILLAH}</span>
+                  </div>
+                </div>
+              );
+            }
+
+            const words =
+              type === LINE_AYAH ? wordsByLine.get(lineNumber) ?? [] : [];
+
+            return (
+              <div
+                key={lineNumber}
+                className="mushaf-row"
+                data-line={lineNumber}
+              >
+                <MushafLine
+                  lineNumber={lineNumber}
+                  words={words}
+                  onPlay={onPlay}
+                  isCentered={isCentered === 1}
+                />
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mushaf-page-number relative font-arabic">
           {toArabicNumber(pageNumber)}
-        </span>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
+);
+
+MushafPage.displayName = "MushafPage";
+
+export default MushafPage;

@@ -15,6 +15,11 @@
 }
 
 /* ===== Base Styles ===== */
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
   background: linear-gradient(
     165deg,
@@ -22,7 +27,8 @@ body {
     var(--color-mushaf-bg-secondary) 50%,
     #0e1526 100%
   );
-  min-height: 100vh;
+  height: 100%;
+  overflow: hidden;
 }
 
 /* ===== Arabic Font Utility ===== */
@@ -101,49 +107,120 @@ body {
 
 /* ===== Mushaf Layout & Aesthetic ===== */
 .mushaf-page {
-  box-shadow: 
+  box-shadow:
     0 10px 40px -10px rgba(0, 0, 0, 0.5),
     0 25px 100px -20px rgba(0, 0, 0, 0.4),
-    inset 20px 0 40px -10px rgba(0, 0, 0, 0.05), /* Inner Binding Shadow Left */
-    inset -20px 0 40px -10px rgba(0, 0, 0, 0.05), /* Inner Binding Shadow Right */
+    inset 20px 0 40px -10px rgba(0, 0, 0, 0.05),
+    inset -20px 0 40px -10px rgba(0, 0, 0, 0.05),
     inset 0 0 120px rgba(220, 215, 190, 0.1);
-  background-image: 
+  background-color: #fdfcf0;
+  background-image:
     radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
     url("https://www.transparenttextures.com/patterns/natural-paper.png");
   border: 12px solid #dcd7be;
   border-radius: 4px;
-}
-
-.mushaf-lines-container {
-  padding: 0 0.25rem;
+  width: 650px;
+  height: 928px;
+  padding: 16px 22px 10px;
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
 }
 
-.mushaf-lines-container > div {
-  width: 100%;
-  min-height: 3.8rem; /* Correct Medina 15-line spacing */
+.mushaf-top-strip {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
+  justify-content: space-between;
+  flex: 0 0 24px;
+  height: 24px;
+  padding: 0 4px;
+  margin-bottom: 2px;
+  border-bottom: 1px solid #e6debb;
+  color: #8b7355;
+  font-size: 12px;
+}
+
+.mushaf-frame {
+  display: grid;
+  grid-template-rows: repeat(15, minmax(0, 1fr));
+  flex: 1;
+  min-height: 0;
+  direction: rtl;
+}
+
+.mushaf-row {
+  display: flex;
+  align-items: center;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .mushaf-line {
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 3rem;
+  height: 100%;
+  white-space: nowrap;
+  font-size: 27px;
+  line-height: 1.05;
+}
+
+.mushaf-line.justified {
+  justify-content: space-between;
+}
+
+.mushaf-line.center {
+  justify-content: center;
+  gap: 0.25em;
+}
+
+.bismillah-line {
+  font-size: 24px;
+  color: #2c2c2c;
+}
+
+.surah-header {
+  height: 100%;
+}
+
+.surah-banner {
+  height: 100%;
+  border-top: 1px solid #d8c99a;
+  border-bottom: 1px solid #d8c99a;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(216, 201, 154, 0.18) 50%,
+    transparent 100%
+  );
+}
+
+.surah-banner::before,
+.surah-banner::after {
+  content: "❖";
+  position: absolute;
+  color: #b9a06a;
+  font-size: 10px;
+  line-height: 1;
+}
+
+.surah-banner::before {
+  right: 8px;
+}
+
+.surah-banner::after {
+  left: 8px;
 }
 
 .mushaf-word {
-  /* Inherit tailwind sizing but provide fallback */
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
-  line-height: 1; /* Reset for flex grid stability */
-  color: #1a1a1a;
   display: inline-block;
   vertical-align: middle;
+  padding: 0 1px;
+  line-height: 1;
+  color: #1a1a1a;
+  user-select: none;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .mushaf-word:hover {
@@ -151,6 +228,54 @@ body {
   background: rgba(139, 115, 85, 0.08);
   border-radius: 4px;
 }
+
+.mushaf-word.is-active {
+  background: rgba(251, 191, 36, 0.18);
+  color: #78350f;
+}
+
+.ayah-badge {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 1.65em;
+  height: 1.65em;
+  margin: 0 2px;
+  border: 1px solid #b9a06a;
+  border-radius: 9999px;
+  background: rgba(253, 252, 240, 0.7);
+  font-size: 0.62em;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    background 0.15s ease,
+    color 0.15s ease,
+    transform 0.15s ease;
+}
+
+.ayah-badge:hover {
+  background: #f6e7b6;
+  color: #5b4628;
+}
+
+.ayah-badge.is-active {
+  background: #f6c744;
+  border-color: #b8860b;
+  transform: scale(1.08);
+}
+
+.mushaf-page-number {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+  height: 20px;
+  color: #8b7355;
+  font-size: 12px;
+  opacity: 0.65;
+}
+
 
 .select-custom option {
   background-color: #1a1a1a;
@@ -161,28 +286,6 @@ body {
 /* Ensure the select itself is always readable in the dark header */
 .select-custom {
   color: rgba(255, 255, 255, 0.9) !important;
-}
-
-/* ===== Responsive Scaling ===== */
-@media (max-width: 640px) {
-  .mushaf-scaling-container {
-    transform: scale(0.85);
-    margin-top: 10px;
-  }
-}
-
-@media (max-width: 480px) {
-  .mushaf-scaling-container {
-    transform: scale(0.7);
-    margin-top: 10px;
-  }
-}
-
-@media (max-width: 380px) {
-  .mushaf-scaling-container {
-    transform: scale(0.6);
-    margin-top: 10px;
-  }
 }
 
 /* ===== Smooth Transitions ===== */

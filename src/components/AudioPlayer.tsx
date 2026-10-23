@@ -21,7 +21,7 @@ export default function AudioPlayer() {
   const activeVerse = verses.find((v) => v.verse_key === activeAyahKey);
 
   return (
-    <div className="player-glass fixed bottom-0 left-0 right-0 z-50 border-t border-white/10 pb-safe shadow-2xl transition-all duration-500">
+    <div className="player-glass relative z-50 w-full border-t border-white/10 shadow-2xl transition-all duration-500">
       <div className="mx-auto max-w-7xl px-4 py-3 sm:py-4">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           

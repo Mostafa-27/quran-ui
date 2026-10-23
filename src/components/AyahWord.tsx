@@ -2,6 +2,7 @@
 
 import { useQuranStore } from "@/lib/store";
 import { Word } from "@/lib/types";
+import { toArabicNumber } from "@/lib/localization";
 
 interface AyahWordProps {
   word: Word;
@@ -13,47 +14,44 @@ export default function AyahWord({ word, onPlay }: AyahWordProps) {
   const isActive = activeAyahKey === word.verse_key;
 
   const handleClick = () => {
-    console.log(`Word clicked: ${word.text_uthmani}, Verse Key: ${word.verse_key}`);
-    if (word.verse_key) {
-      onPlay(word.verse_key);
-    } else {
-      console.warn("Verse key is missing for word!", word);
-    }
+    if (word.verse_key) onPlay(word.verse_key);
   };
 
-  // Render end-of-ayah marker differently
   if (word.char_type_name === "end") {
-    // End marker in Uthmani font is usually a specific character or symbol
+    const ayahNumber = Number(word.verse_key?.split(":")[1]);
+
     return (
       <span
-        className={`
-          mushaf-word-end mx-1 inline-flex cursor-pointer items-center justify-center 
-          font-arabic text-[0.9em] transition-all duration-300
-          ${isActive ? "text-amber-600 scale-110" : "text-[#8b7355] opacity-70"}
-        `}
+        className={`ayah-badge font-arabic ${
+          isActive
+            ? "is-active text-amber-700"
+            : "text-[#8b7355]"
+        }`}
         onClick={handleClick}
+        title={word.verse_key}
       >
-        {word.text_uthmani}
+        {Number.isFinite(ayahNumber) && ayahNumber > 0
+          ? toArabicNumber(ayahNumber)
+          : word.text_uthmani}
       </span>
     );
   }
 
-  // Regular word
   return (
     <span
-      className={`
-        mushaf-word inline-block cursor-pointer px-1 transition-all duration-200
-        font-arabic text-2xl md:text-[27px] text-[#2c2c2c]
-        ${
-          isActive
-            ? "bg-amber-400/20 text-amber-900 rounded-sm shadow-[0_0_10px_rgba(251,191,36,0.2)]"
-            : "hover:bg-amber-100/50 hover:text-black"
-        }
-      `}
+      className={`mushaf-word cursor-pointer ${
+        isActive
+          ? "is-active rounded-sm bg-amber-400/20 text-amber-900"
+          : "hover:text-black"
+      }`}
       onClick={handleClick}
       title={word.verse_key}
     >
-      {word.text_uthmani}
+      {word.code_v2 ? (
+        <span dangerouslySetInnerHTML={{ __html: word.code_v2 }} />
+      ) : (
+        <span className="font-arabic">{word.text_uthmani}</span>
+      )}
     </span>
   );
 }

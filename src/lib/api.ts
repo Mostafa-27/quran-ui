@@ -21,7 +21,7 @@ export async function fetchChapters(): Promise<Chapter[]> {
 
 export async function fetchPage(pageNumber: number): Promise<Verse[]> {
   const res = await fetch(
-    `${API_BASE}/verses/by_page/${pageNumber}?words=true&word_fields=text_uthmani,line_number,page_number,location,audio_url,verse_key`,
+    `${API_BASE}/verses/by_page/${pageNumber}?words=true&word_fields=code_v2,text_uthmani,text_qpc_hafs,line_number,page_number,location,audio_url,verse_key&fields=juz_number&mushaf=1&per_page=50`,
     { next: { revalidate: 86400 } }
   );
   if (!res.ok) throw new Error(`Failed to fetch page: ${res.status}`);
