@@ -1,7 +1,7 @@
 "use client";
 
 import { forwardRef, useMemo } from "react";
-import { Verse, Word } from "@/lib/types";
+import { Chapter, Verse, Word } from "@/lib/types";
 import MushafLine from "./MushafLine";
 import SurahHeader from "./SurahHeader";
 import { useQuranStore } from "@/lib/store";
@@ -34,7 +34,7 @@ const MushafPage = forwardRef<HTMLDivElement, MushafPageProps>(
   ({ pageNumber, verses, onPlay, fontName }, ref) => {
     const chapters = useQuranStore((s) => s.chapters);
 
-    const { wordsByLine, pageChapter, juzNumber } = useMemo(() => {
+    const { wordsByLine, pageChapters, juzNumber } = useMemo(() => {
       const map = new Map<number, Word[]>();
 
       verses.forEach((verse) => {
@@ -48,16 +48,18 @@ const MushafPage = forwardRef<HTMLDivElement, MushafPageProps>(
       });
 
       const firstVerse = verses[0];
-      const chapterId = firstVerse
-        ? Number(firstVerse.verse_key.split(":")[0])
-        : null;
-      const chapter = chapterId
-        ? chapters.find((c) => c.id === chapterId)
-        : undefined;
+      const chapterIds = Array.from(
+        new Set(
+          verses.map((verse) => Number(verse.verse_key.split(":")[0]))
+        )
+      );
+      const chaptersOnPage = chapterIds
+        .map((id) => chapters.find((c) => c.id === id))
+        .filter((c): c is Chapter => Boolean(c));
 
       return {
         wordsByLine: map,
-        pageChapter: chapter,
+        pageChapters: chaptersOnPage,
         juzNumber: firstVerse?.juz_number,
       };
     }, [verses, chapters]);
@@ -72,8 +74,10 @@ const MushafPage = forwardRef<HTMLDivElement, MushafPageProps>(
         <div className="pointer-events-none absolute inset-2 border-2 border-[#e6debb]" />
 
         <div className="mushaf-top-strip relative">
-          <span className="font-arabic">
-            {pageChapter?.name_arabic ?? "المصحف"}
+          <span className="mushaf-top-surahs font-arabic">
+            {pageChapters.length > 0
+              ? pageChapters.map((c) => c.name_arabic).join(" • ")
+              : "المصحف"}
           </span>
           {typeof juzNumber === "number" && (
             <span className="font-arabic">

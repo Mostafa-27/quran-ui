@@ -6,6 +6,7 @@ import { useQuranAudio } from "@/hooks/useQuranAudio";
 import { useMushafFitScale } from "@/hooks/useMushafFitScale";
 import { useQpcPageFont } from "@/hooks/useQpcPageFont";
 import { fetchPage } from "@/lib/api";
+import type { Verse } from "@/lib/types";
 import MushafPage from "./MushafPage";
 
 interface MushafViewerProps {
@@ -18,6 +19,7 @@ export default function MushafViewer({ initialPage = 1 }: MushafViewerProps) {
   const reciterId = useQuranStore((s) => s.reciterId);
   const setVerses = useQuranStore((s) => s.setVerses);
   const setAudioFiles = useQuranStore((s) => s.setAudioFiles);
+  const syncCurrentChapter = useQuranStore((s) => s.syncCurrentChapter);
   const getCachedPage = useQuranStore((s) => s.getCachedPage);
   const cachePage = useQuranStore((s) => s.cachePage);
   const clearAutoPlay = useQuranStore((s) => s.clearAutoPlay);
@@ -30,7 +32,11 @@ export default function MushafViewer({ initialPage = 1 }: MushafViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
 
-  useMushafFitScale(containerRef, pageRef, !isLoading && verses.length > 0 && fontReady);
+  useMushafFitScale(
+    containerRef,
+    pageRef,
+    !isLoading && verses.length > 0 && fontReady,
+  );
 
   useEffect(() => {
     if (initialPage && initialPage !== useQuranStore.getState().currentPage) {
@@ -77,6 +83,23 @@ export default function MushafViewer({ initialPage = 1 }: MushafViewerProps) {
       }
     };
 
+    const syncPageChapter = (pageVerses: Verse[]) => {
+      if (pageVerses.length === 0) return;
+
+      const pageChapterIds = new Set(
+        pageVerses.map((verse) => Number(verse.verse_key.split(":")[0])),
+      );
+      const currentChapter = useQuranStore.getState().currentChapter;
+      const firstChapterId = Number(pageVerses[0].verse_key.split(":")[0]);
+      const chapterToSync = pageChapterIds.has(currentChapter)
+        ? currentChapter
+        : firstChapterId;
+
+      if (Number.isFinite(chapterToSync)) {
+        syncCurrentChapter(chapterToSync);
+      }
+    };
+
     async function loadPageData() {
       const cached = getCachedPage(currentPage, reciterId);
 
@@ -84,6 +107,8 @@ export default function MushafViewer({ initialPage = 1 }: MushafViewerProps) {
         setVerses(cached.verses);
         setAudioFiles(cached.audioFiles);
         setIsLoading(false);
+
+        syncPageChapter(cached.verses);
 
         if (useQuranStore.getState().pendingAutoPlay) {
           clearAutoPlay();
@@ -105,6 +130,8 @@ export default function MushafViewer({ initialPage = 1 }: MushafViewerProps) {
         setAudioFiles([]);
         cachePage(currentPage, reciterId, pageVerses, []);
 
+        syncPageChapter(pageVerses);
+
         if (useQuranStore.getState().pendingAutoPlay) {
           clearAutoPlay();
           const firstVerseKey = pageVerses[0]?.verse_key;
@@ -124,7 +151,17 @@ export default function MushafViewer({ initialPage = 1 }: MushafViewerProps) {
     return () => {
       cancelled = true;
     };
-  }, [currentPage, reciterId, getCachedPage, cachePage, clearAutoPlay, playAyah, setVerses, setAudioFiles]);
+  }, [
+    currentPage,
+    reciterId,
+    getCachedPage,
+    cachePage,
+    clearAutoPlay,
+    playAyah,
+    setVerses,
+    setAudioFiles,
+    syncCurrentChapter,
+  ]);
 
   return (
     <div

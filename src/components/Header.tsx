@@ -8,10 +8,25 @@ interface HeaderProps {
 }
 
 export default function Header({ chapters, reciters }: HeaderProps) {
-  const { currentChapter, reciterId, setCurrentChapter, setReciterId } =
-    useQuranStore();
+  const {
+    currentChapter,
+    activeAyahKey,
+    reciterId,
+    setCurrentChapter,
+    setReciterId,
+  } = useQuranStore();
 
-  const currentChapterData = chapters.find((c) => c.id === currentChapter);
+  const activeChapterId = activeAyahKey
+    ? Number(activeAyahKey.split(":")[0])
+    : null;
+  const displayChapterId =
+    activeChapterId && Number.isFinite(activeChapterId)
+      ? activeChapterId
+      : currentChapter;
+
+  const currentChapterData = chapters.find(
+    (c) => c.id === displayChapterId
+  );
 
   return (
     <header className="header-glass sticky top-0 z-50 border-b border-white/5 backdrop-blur-xl" dir="rtl">
@@ -44,7 +59,7 @@ export default function Header({ chapters, reciters }: HeaderProps) {
         <div className="flex items-center gap-1.5 sm:gap-2">
           {/* Surah Selector */}
           <select
-            value={currentChapter}
+            value={displayChapterId}
             onChange={(e) => setCurrentChapter(parseInt(e.target.value))}
             className="select-custom h-9 w-32 rounded-lg border border-white/10 bg-white/5 pl-2.5 pr-7 text-[12px] font-semibold text-white/80 outline-none transition-all hover:bg-white/10 focus:border-amber-500/50 sm:w-44 font-arabic"
           >

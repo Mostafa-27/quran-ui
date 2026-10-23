@@ -139,6 +139,13 @@ body {
   font-size: 12px;
 }
 
+.mushaf-top-surahs {
+  max-width: 72%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .mushaf-frame {
   display: grid;
   grid-template-rows: repeat(15, minmax(0, 1fr));

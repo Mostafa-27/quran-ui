@@ -34,6 +34,7 @@ export interface Verse {
   verse_key: string;
   text_uthmani: string;
   juz_number?: number;
+  page_number?: number;
   words: Word[];
 }
 
