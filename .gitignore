@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# generated Quran data
+/public/data/
+
 # production
 /build
 

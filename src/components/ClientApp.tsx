@@ -6,18 +6,20 @@ import BismillahDivider from "./BismillahDivider";
 import MushafViewer from "./MushafViewer";
 import AudioPlayer from "./AudioPlayer";
 import { useQuranStore } from "@/lib/store";
-import { Chapter, Reciter } from "@/lib/types";
+import { Chapter, Reciter, Verse } from "@/lib/types";
 
 interface ClientAppProps {
   chapters: Chapter[];
   reciters: Reciter[];
   initialPage?: number;
+  initialVerses?: Verse[];
 }
 
 export default function ClientApp({
   chapters,
   reciters,
   initialPage = 1,
+  initialVerses,
 }: ClientAppProps) {
   const setChapters = useQuranStore((s) => s.setChapters);
   const setCurrentPage = useQuranStore((s) => s.setCurrentPage);
@@ -40,7 +42,7 @@ export default function ClientApp({
       <Header chapters={chapters} reciters={reciters} />
       <BismillahDivider />
       <main className="flex-1 overflow-hidden">
-        <MushafViewer initialPage={initialPage} />
+        <MushafViewer initialPage={initialPage} initialVerses={initialVerses} />
       </main>
       <AudioPlayer />
     </div>

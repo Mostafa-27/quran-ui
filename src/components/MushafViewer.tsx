@@ -11,9 +11,13 @@ import MushafPage from "./MushafPage";
 
 interface MushafViewerProps {
   initialPage?: number;
+  initialVerses?: Verse[];
 }
 
-export default function MushafViewer({ initialPage = 1 }: MushafViewerProps) {
+export default function MushafViewer({
+  initialPage = 1,
+  initialVerses,
+}: MushafViewerProps) {
   const verses = useQuranStore((s) => s.verses);
   const currentPage = useQuranStore((s) => s.currentPage);
   const reciterId = useQuranStore((s) => s.reciterId);
@@ -123,7 +127,14 @@ export default function MushafViewer({ initialPage = 1 }: MushafViewerProps) {
       setIsLoading(true);
 
       try {
-        const pageVerses = await fetchPage(currentPage);
+        let pageVerses: Verse[];
+
+        if (initialVerses && currentPage === initialPage) {
+          pageVerses = initialVerses;
+        } else {
+          pageVerses = await fetchPage(currentPage);
+        }
+
         if (cancelled) return;
 
         setVerses(pageVerses);
@@ -161,6 +172,8 @@ export default function MushafViewer({ initialPage = 1 }: MushafViewerProps) {
     setVerses,
     setAudioFiles,
     syncCurrentChapter,
+    initialPage,
+    initialVerses,
   ]);
 
   return (

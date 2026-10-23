@@ -42,12 +42,24 @@ async function fetchRawPage(pageNumber: number): Promise<Verse[]> {
 }
 
 export async function fetchPage(pageNumber: number): Promise<Verse[]> {
+  // Prefer the build-time static dataset so the app does not depend on the
+  // Quran API at runtime.
+  try {
+    const response = await fetch(`/data/pages/${pageNumber}.json`, {
+      cache: "force-cache",
+    });
+    if (response.ok) {
+      return (await response.json()) as Verse[];
+    }
+  } catch {
+    // Fall through to the live API if static data is unavailable.
+  }
+
   const pagesToFetch = [pageNumber];
   if (pageNumber < 604) pagesToFetch.push(pageNumber + 1);
 
   const responses = await Promise.all(pagesToFetch.map(fetchRawPage));
 
-  // Merge verses from the current and next page, deduplicating by verse_key.
   const verseMap = new Map<string, Verse>();
   for (const verses of responses) {
     for (const verse of verses) {
@@ -58,11 +70,7 @@ export async function fetchPage(pageNumber: number): Promise<Verse[]> {
     }
   }
 
-  // The API's by_page endpoint returns a sliding window: it includes verses
-  // from the previous page (with their previous-page line numbers) and omits
-  // the last verse(s) of the current page (which appear in the next response).
-  // Keep only the verses that actually belong to this page.
-  const pageVerses = Array.from(verseMap.values())
+  return Array.from(verseMap.values())
     .filter((verse) => verse.page_number === pageNumber)
     .sort((a, b) => {
       const aKey = a.verse_key.split(":").map(Number);
@@ -70,8 +78,6 @@ export async function fetchPage(pageNumber: number): Promise<Verse[]> {
       if (aKey[0] !== bKey[0]) return aKey[0] - bKey[0];
       return aKey[1] - bKey[1];
     });
-
-  return pageVerses;
 }
 
 export async function fetchVerses(chapterNumber: number): Promise<Verse[]> {

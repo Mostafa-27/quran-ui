@@ -1,6 +1,5 @@
 import { cookies } from "next/headers";
-import ClientApp from "@/components/ClientApp";
-import { fetchChapters, fetchReciters } from "@/lib/api";
+import { redirect } from "next/navigation";
 
 export default async function Home() {
   const cookieStore = await cookies();
@@ -11,17 +10,5 @@ export default async function Home() {
       ? parsedPage
       : 1;
 
-  // Server-side data fetching for SEO and initial load
-  const [chapters, reciters] = await Promise.all([
-    fetchChapters(),
-    fetchReciters(),
-  ]);
-
-  return (
-    <ClientApp
-      chapters={chapters}
-      reciters={reciters}
-      initialPage={initialPage}
-    />
-  );
+  redirect(`/page/${initialPage}`);
 }

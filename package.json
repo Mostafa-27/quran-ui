@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "data:download": "node scripts/download-quran-data.mjs",
+    "build": "npm run data:download && next build",
     "start": "next start",
     "lint": "eslint"
   },
